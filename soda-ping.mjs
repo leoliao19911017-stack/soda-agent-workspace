@@ -42,17 +42,25 @@ const digest = crypto.createHash('sha256').update(Buffer.from(body)).digest('hex
 const msg = `SODA-AGENT-SYNC-V2\nping\n${agentId}\n${stamp}\n${nonce}\n${digest}`;
 const sig = crypto.sign(null, Buffer.from(msg), key).toString('base64url');
 
-const res = await fetch(`${BASE}/api/agent-ping`, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'x-soda-agent': agentId,
-    'x-soda-time': stamp,
-    'x-soda-nonce': nonce,
-    'x-soda-signature': sig
-  },
-  body
-});
+let res;
+try {
+  res = await fetch(`${BASE}/api/agent-ping`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-soda-agent': agentId,
+      'x-soda-time': stamp,
+      'x-soda-nonce': nonce,
+      'x-soda-signature': sig
+    },
+    body,
+    signal: AbortSignal.timeout(8000)
+  });
+} catch (e) {
+  const timedOut = e && (e.name === 'TimeoutError' || e.name === 'AbortError');
+  console.error('心跳失败：' + (timedOut ? '请求超时（8 秒）' : (e.message || String(e))));
+  process.exit(2);
+}
 const text = await res.text();
 if (!res.ok) { console.error('心跳失败 HTTP ' + res.status + ' ' + text.slice(0, 150)); process.exit(2); }
 console.log(text);
