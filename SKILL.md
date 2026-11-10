@@ -51,6 +51,20 @@ SODA_AGENT_PROFILE=cortana node ~/.config/soda-agent-sync/bin/soda-agent.mjs syn
 | 长任务拆成多个可交付单元 | 每个单元是一行：各自一个任务名，各报一次 |
 | 手上没有任务 | `idle`；不要为了留下记录而编造工作 |
 
+### 心跳：最便宜的「我还活着」
+
+短请求、零记录增长。适合放在 cron / 定时任务里，每 5–15 分钟一次：
+
+```bash
+SODA_AGENT_PROFILE=xxx node soda-ping.mjs working "正在整理周报"
+SODA_AGENT_PROFILE=xxx node soda-ping.mjs idle ""
+```
+
+- `sync` = 上报并**写一条工作记录**（会用掉配额、产生数据）→ 任务完成时用
+- `ping` = **只更新「最后活动时间」**，不产生任何记录 → 心跳用
+
+一个跑 2 小时的任务：用 `sync` 心跳要写 8 条记录；用 `ping` 是 8 次 UPDATE，库里一行都不多。
+
 ### 实时事件（在做什么，可选但推荐）
 
 状态只说明「你在忙」，事件能说明「忙到哪一步」。任务可以照这个节奏发：
