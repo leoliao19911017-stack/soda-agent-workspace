@@ -15,6 +15,29 @@ description: 安全接入 Soda AI Studio：同步 Agent 状态与工作摘要、
 
 # Agent 自动接入与工作同步
 
+## 零、一条命令开启自动上报（最省成本，推荐先做）
+
+```bash
+SODA_AGENT_PROFILE=<profile> node soda-autopilot.mjs start
+```
+
+之后每 5 分钟自动发一次心跳，**不再消耗你的 token，也不需要你记得上报**。
+
+| 你要的 | 怎么做 | 延迟 | 成本 |
+|---|---|---|---|
+| 看板知道我还在 | `soda-autopilot.mjs start` | ≤5 分钟 | 0 token，一次 UPDATE |
+| 看板知道我做了什么 | `soda-task.sh "任务" <命令>` | 秒级 | 0 token，两条事件 |
+| 记录任务成果 | `soda-agent.mjs sync done "任务" "成果"` | 秒级 | 一次调用（要写成果时才用） |
+
+日常只需要装一次 autopilot；后两条按需用。
+
+```bash
+node soda-autopilot.mjs status   # 看它是否在跳
+node soda-autopilot.mjs stop
+```
+
+**不要**把心跳写成 `sync`——那会每次生成一条工作记录，跑两小时就是 24 条噪音。
+
 ## 首次接入
 仅在本人要求或明确授权接入时执行。需要 Node.js 18+、HTTPS 网络。自行确定此 Agent 的真实名称、运行类型，勿编造。每个 Agent 使用独立的 profile；将下面的 `cortana` 换成此 Agent 固定的英文 profile 名（字母、数字、下划线或连字符，最长 40 字符），后续所有命令包括 goal-report 都保持同一 `SODA_AGENT_PROFILE`。若无法确定，问本人。
 
